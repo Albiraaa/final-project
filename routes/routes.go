@@ -23,23 +23,23 @@ func InitRoutes() *mux.Router {
 	protected := api.PathPrefix("").Subrouter()
 	protected.Use(middleware.JWTMiddleware)
 
-	protected.HandleFunc("/kategori", handlers.CreateKategori).Methods("POST")
-	protected.HandleFunc("/kategori", handlers.GetKategori).Methods("GET")
-	protected.HandleFunc("/kategori/{id}", handlers.GetKategoriByID).Methods("GET")
-	protected.HandleFunc("/kategori/{id}", handlers.UpdateKategori).Methods("PUT")
-	protected.HandleFunc("/kategori/{id}", handlers.DeleteKategori).Methods("DELETE")
+	protected.HandleFunc("/kategori", handlers.CreateKategori).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/kategori", handlers.GetKategori).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/kategori/{id}", handlers.GetKategoriByID).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/kategori/{id}", handlers.UpdateKategori).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/kategori/{id}", handlers.DeleteKategori).Methods("DELETE", "OPTIONS")
 
-	protected.HandleFunc("/lokasi", handlers.CreateLokasi).Methods("POST")
-	protected.HandleFunc("/lokasi", handlers.GetLokasi).Methods("GET")
-	protected.HandleFunc("/lokasi/{id}", handlers.GetLokasiByID).Methods("GET")
-	protected.HandleFunc("/lokasi/{id}", handlers.UpdateLokasi).Methods("PUT")
-	protected.HandleFunc("/lokasi/{id}", handlers.DeleteLokasi).Methods("DELETE")
+	protected.HandleFunc("/lokasi", handlers.CreateLokasi).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/lokasi", handlers.GetLokasi).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/lokasi/{id}", handlers.GetLokasiByID).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/lokasi/{id}", handlers.UpdateLokasi).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/lokasi/{id}", handlers.DeleteLokasi).Methods("DELETE", "OPTIONS")
 
-	protected.HandleFunc("/ht", handlers.CreateHT).Methods("POST")
-	protected.HandleFunc("/ht", handlers.GetHT).Methods("GET")
-	protected.HandleFunc("/ht/{id}", handlers.GetHTByID).Methods("GET")
-	protected.HandleFunc("/ht/{id}", handlers.UpdateHT).Methods("PUT")
-	protected.HandleFunc("/ht/{id}", handlers.DeleteHT).Methods("DELETE")
+	protected.HandleFunc("/ht", handlers.CreateHT).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/ht", handlers.GetHT).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/ht/{id}", handlers.GetHTByID).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/ht/{id}", handlers.UpdateHT).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/ht/{id}", handlers.DeleteHT).Methods("DELETE", "OPTIONS")
 
 	return r
 }
