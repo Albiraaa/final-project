@@ -4,47 +4,30 @@
   <meta charset="UTF-8" />
   <title>Client API Inventaris HT (Golang + JWT)</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    h1, h2 {
-      margin-bottom: 5px;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1, h2 { margin-bottom: 5px; }
     .card {
       border: 1px solid #ccc;
       padding: 15px;
       margin-bottom: 15px;
       border-radius: 5px;
     }
-    label {
-      display: block;
-      margin-top: 5px;
-    }
-    input {
+    label { display: block; margin-top: 5px; }
+    input, select {
       padding: 5px;
       margin-top: 3px;
       width: 250px;
       max-width: 100%;
     }
-    button {
-      margin-top: 10px;
-      padding: 6px 10px;
-      cursor: pointer;
-    }
-    #status {
-      margin-top: 10px;
-      font-weight: bold;
-    }
+    button { margin-top: 10px; padding: 6px 10px; cursor: pointer; }
+    #status { font-weight: bold; }
     #tokenBox {
       font-size: 12px;
       background: #f5f5f5;
       padding: 5px;
-      border-radius: 4px;
-      word-wrap: break-word;
+      word-break: break-all;
     }
     #result {
-      margin-top: 20px;
       background: #111;
       color: #0f0;
       padding: 10px;
@@ -57,170 +40,196 @@
 
 <h1>Client API Inventaris HT (Golang + JWT)</h1>
 
-<!-- BASE URL -->
 <div class="card">
   <h2>Konfigurasi</h2>
-  <label>Base URL API:
-    <input type="text" id="baseUrl"
-      value="https://final-project-production-2cff.up.railway.app" />
-  </label>
+  <input id="baseUrl" value="https://final-project-production-2cff.up.railway.app">
 </div>
 
-<!-- LOGIN -->
 <div class="card">
   <h2>Login</h2>
-  <label>Email
-    <input type="text" id="email" placeholder="contoh: admin@mail.com">
-  </label>
-  <label>Password
-    <input type="password" id="password" placeholder="admin">
-  </label>
+  <input id="email" placeholder="admin@mail.com">
+  <input id="password" type="password" placeholder="admin">
   <button onclick="login()">Login</button>
-
   <div id="status">Belum login</div>
-  <div><strong>JWT Token:</strong></div>
   <div id="tokenBox">(kosong)</div>
 </div>
 
-<!-- OPERASI DATA -->
 <div class="card">
-  <h2>Operasi Data</h2>
-
-  <button onclick="getKategori()">Lihat Semua Kategori</button>
-  <button onclick="getLokasi()">Lihat Semua Lokasi</button>
-  <button onclick="getHT()">Lihat Semua HT</button>
-
-  <hr>
-
-  <label>ID HT
-    <input type="number" id="htId" placeholder="contoh: 1">
-  </label>
-  <button onclick="getHTById()">Lihat HT berdasarkan ID</button>
-
-  <br><br>
-
-  <label>ID Kategori
-    <input type="number" id="kategoriId" placeholder="contoh: 1">
-  </label>
-  <button onclick="getKategoriById()">Lihat Kategori by ID</button>
-
-  <br><br>
-
-  <label>ID Lokasi
-    <input type="number" id="lokasiId" placeholder="contoh: 1">
-  </label>
-  <button onclick="getLokasiById()">Lihat Lokasi by ID</button>
+  <h2>Kelola Kategori</h2>
+  <select id="kategoriIdForm"></select>
+  <input id="kategoriNama" placeholder="Nama Kategori">
+  <button onclick="createKategori()">POST</button>
+  <button onclick="updateKategori()">PUT</button>
+  <button onclick="deleteKategori()">DELETE</button>
 </div>
 
-<h2>Hasil Response</h2>
-<pre id="result">Belum ada request.</pre>
+<div class="card">
+  <h2>Kelola Lokasi</h2>
+  <select id="lokasiIdForm"></select>
+  <input id="lokasiNama" placeholder="Nama Lokasi">
+  <button onclick="createLokasi()">POST</button>
+  <button onclick="updateLokasi()">PUT</button>
+  <button onclick="deleteLokasi()">DELETE</button>
+</div>
+
+<div class="card">
+  <h2>Kelola HT</h2>
+  <select id="htIdForm"></select>
+  <input id="htSerial" placeholder="Serial">
+  <input id="htMerk" placeholder="Merk">
+  <input id="htStatus" placeholder="Status">
+  <select id="htKategoriId"></select>
+  <select id="htLokasiId"></select>
+  <button onclick="createHT()">POST</button>
+  <button onclick="updateHT()">PUT</button>
+  <button onclick="deleteHT()">DELETE</button>
+</div>
+
+<h2>Response</h2>
+<pre id="result">Belum ada request</pre>
 
 <script>
-  let token = null;
+let token = localStorage.getItem("jwt_token");
+let kategoriCache = [], lokasiCache = [], htCache = [];
 
-  function setStatus(text, ok = true) {
-    const el = document.getElementById("status");
-    el.textContent = text;
-    el.style.color = ok ? "green" : "red";
-  }
+const base = () => baseUrl.value.replace(/\/+$/, "");
+const auth = () => ({
+  "Authorization": "Bearer " + token,
+  "Content-Type": "application/json"
+});
+const show = d => result.textContent = JSON.stringify(d, null, 2);
 
-  function setResult(data) {
-    document.getElementById("result").textContent =
-      typeof data === "string" ? data : JSON.stringify(data, null, 2);
-  }
+// ===== LOGIN =====
+async function login() {
+  const res = await fetch(base()+"/api/users/login", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ email:email.value, password:password.value })
+  });
+  const data = await res.json();
+  if (!data.token) return show(data);
+  token = data.token;
+  localStorage.setItem("jwt_token", token);
+  status.textContent = "Login berhasil ✅";
+  tokenBox.textContent = token;
+  afterLoginLoad();
+}
 
-  function setToken(t) {
-    token = t;
-    document.getElementById("tokenBox").textContent = token || "(kosong)";
-    if (token) {
-      setStatus("Login berhasil ✅", true);
-      localStorage.setItem("jwt_token", token);
-    } else {
-      setStatus("Belum login", false);
-      localStorage.removeItem("jwt_token");
-    }
-  }
+// ===== LOAD DROPDOWN =====
+async function loadKategori() {
+  kategoriCache = await (await fetch(base()+"/api/kategori",{headers:auth()})).json();
+  kategoriIdForm.innerHTML = "<option value='' disabled selected hidden>Pilih Kategori</option>";
+  htKategoriId.innerHTML = "<option value='' disabled selected hidden>Pilih Kategori</option>";
+  kategoriCache.forEach(k=>{
+    kategoriIdForm.innerHTML += `<option value="${k.id}">${k.nama}</option>`;
+    htKategoriId.innerHTML += `<option value="${k.id}">${k.nama}</option>`;
+  });
+}
 
-  (function init() {
-    const saved = localStorage.getItem("jwt_token");
-    if (saved) setToken(saved);
-  })();
+async function loadLokasi() {
+  lokasiCache = await (await fetch(base()+"/api/lokasi",{headers:auth()})).json();
+  lokasiIdForm.innerHTML = "<option value='' disabled selected hidden>Pilih Lokasi</option>";
+  htLokasiId.innerHTML = "<option value='' disabled selected hidden>Pilih Lokasi</option>";
+  lokasiCache.forEach(l=>{
+    lokasiIdForm.innerHTML += `<option value="${l.id}">${l.nama}</option>`;
+    htLokasiId.innerHTML += `<option value="${l.id}">${l.nama}</option>`;
+  });
+}
 
-  function getBaseUrl() {
-    return document.getElementById("baseUrl").value.replace(/\/+$/, "");
-  }
+async function loadHT() {
+  htCache = await (await fetch(base()+"/api/ht",{headers:auth()})).json();
+  htIdForm.innerHTML = "<option value='' disabled selected hidden>Pilih HT</option>";
+  htCache.forEach(h=>{
+    htIdForm.innerHTML += `<option value="${h.id}">${h.serial} - ${h.merk}</option>`;
+  });
+}
 
-  async function login() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
+async function afterLoginLoad() {
+  await loadKategori();
+  await loadLokasi();
+  await loadHT();
+}
 
-    if (!email || !password) {
-      alert("Email & password wajib diisi");
-      return;
-    }
+// ===== AUTO FILL =====
+kategoriIdForm.onchange = () => {
+  const k = kategoriCache.find(x=>x.id==kategoriIdForm.value);
+  if(k) kategoriNama.value = k.nama;
+};
 
-    try {
-      const res = await fetch(getBaseUrl() + "/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
+lokasiIdForm.onchange = () => {
+  const l = lokasiCache.find(x=>x.id==lokasiIdForm.value);
+  if(l) lokasiNama.value = l.nama;
+};
 
-      const data = await res.json();
-      if (!res.ok || !data.token) {
-        setStatus("Login gagal ❌", false);
-        setResult(data);
-        return;
-      }
+htIdForm.onchange = () => {
+  const h = htCache.find(x=>x.id==htIdForm.value);
+  if(!h) return;
+  htSerial.value = h.serial;
+  htMerk.value = h.merk;
+  htStatus.value = h.status;
+  htKategoriId.value = h.kategori_id;
+  htLokasiId.value = h.lokasi_id;
+};
 
-      setToken(data.token);
-      setResult(data);
-    } catch (err) {
-      setStatus("Login error", false);
-      setResult(String(err));
-    }
-  }
+// ===== CRUD =====
+const post = async (p, b) => {
+  const res = await fetch(base()+p,{
+    method:"POST",
+    headers:auth(),
+    body:JSON.stringify(b)
+  });
+  const data = await res.json();
+  show(data);
+  refreshAll();
+};
+const put = async (p, b) => {
+  const res = await fetch(base()+p,{
+    method:"PUT",
+    headers:auth(),
+    body:JSON.stringify(b)
+  });
+  const data = await res.json();
+  show(data);
+  refreshAll();
+};
+const del = async (p) => {
+  const res = await fetch(base()+p,{
+    method:"DELETE",
+    headers:auth()
+  });
+  const data = await res.json();
+  show(data);
+  refreshAll();
+};
 
-  async function fetchWithAuth(path) {
-    if (!token) {
-      alert("Belum login");
-      return;
-    }
+const createKategori = ()=>post("/api/kategori",{nama:kategoriNama.value});
+const updateKategori = ()=>put("/api/kategori/"+kategoriIdForm.value,{nama:kategoriNama.value});
+const deleteKategori = ()=>del("/api/kategori/"+kategoriIdForm.value);
 
-    try {
-      const res = await fetch(getBaseUrl() + path, {
-        headers: { "Authorization": "Bearer " + token }
-      });
-      const data = await res.json();
-      setResult(data);
-    } catch (err) {
-      setResult(String(err));
-    }
-  }
+const createLokasi = ()=>post("/api/lokasi",{nama:lokasiNama.value});
+const updateLokasi = ()=>put("/api/lokasi/"+lokasiIdForm.value,{nama:lokasiNama.value});
+const deleteLokasi = ()=>del("/api/lokasi/"+lokasiIdForm.value);
 
-  // ===== API CALLS =====
-  function getKategori() { fetchWithAuth("/api/kategori"); }
-  function getLokasi() { fetchWithAuth("/api/lokasi"); }
-  function getHT() { fetchWithAuth("/api/ht"); }
+const createHT = ()=>post("/api/ht",{
+  serial:htSerial.value, merk:htMerk.value, status:htStatus.value,
+  kategori_id:Number(htKategoriId.value),
+  lokasi_id:Number(htLokasiId.value)
+});
+const updateHT = ()=>put("/api/ht/"+htIdForm.value,{
+  serial:htSerial.value, merk:htMerk.value, status:htStatus.value,
+  kategori_id:Number(htKategoriId.value),
+  lokasi_id:Number(htLokasiId.value)
+});
+const deleteHT = ()=>del("/api/ht/"+htIdForm.value);
 
-  function getHTById() {
-    const id = document.getElementById("htId").value;
-    if (!id) return alert("Isi ID HT");
-    fetchWithAuth("/api/ht/" + id);
-  }
-
-  function getKategoriById() {
-    const id = document.getElementById("kategoriId").value;
-    if (!id) return alert("Isi ID Kategori");
-    fetchWithAuth("/api/kategori/" + id);
-  }
-
-  function getLokasiById() {
-    const id = document.getElementById("lokasiId").value;
-    if (!id) return alert("Isi ID Lokasi");
-    fetchWithAuth("/api/lokasi/" + id);
-  }
+async function refreshAll() {
+  await loadKategori();
+  await loadLokasi();
+  await loadHT();
+}
 </script>
+
+
 
 </body>
 </html>
