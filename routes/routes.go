@@ -14,8 +14,11 @@ func InitRoutes() *mux.Router {
 
 	api := r.PathPrefix("/api").Subrouter()
 
-	api.HandleFunc("/users/register", handlers.Register).Methods("POST")
-	api.HandleFunc("/users/login", handlers.Login).Methods("POST")
+	api.HandleFunc("/users/login", handlers.Login).
+		Methods("POST", "OPTIONS")
+
+	api.HandleFunc("/users/register", handlers.Register).
+		Methods("POST", "OPTIONS")
 
 	protected := api.PathPrefix("").Subrouter()
 	protected.Use(middleware.JWTMiddleware)
