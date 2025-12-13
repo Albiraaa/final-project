@@ -27,35 +27,14 @@ Project ini adalah **REST API Inventaris HT (Handy Talky)** menggunakan **Golang
 
 ---
 
-## ⚙️ Konfigurasi Environment (.env)
-
-```env
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASS=postgres
-DB_NAME=inventaris_ht
-DB_PORT=5432
-
-JWT_SECRET=ht-secret-aman
-```
-
-> 🔹 Untuk **Railway**, variabel di atas otomatis membaca dari:
-> `PGHOST, PGUSER, PGPASSWORD, PGDATABASE, PGPORT`
-
----
 
 ## ▶️ Menjalankan Project
 
-```bash
-go mod tidy
-go run main.go
-```
-
 Server berjalan di:
 ```
-http://localhost:8080
+final-project-production-2cff.up.railway.app
 ```
-
+Sudah terdeploy di Railway
 ---
 
 ## 🔐 Autentikasi (Login)
@@ -102,7 +81,7 @@ Authorization: Bearer <token>
 ### Body POST / PUT
 ```json
 {
-  "nama": "HT Security"
+  "nama": "Radio HT"
 }
 ```
 
@@ -199,16 +178,6 @@ Tabel utama:
 - kategori
 - lokasi
 - ht
-
----
-
-## ☁️ Deployment (Railway)
-
-1. Push project ke GitHub
-2. Create Project di Railway
-3. Add PostgreSQL Plugin
-4. Set Environment Variables
-5. Railway auto build & deploy
 
 ---
 
