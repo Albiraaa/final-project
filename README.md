@@ -151,7 +151,7 @@ Project ini dilengkapi **client HTML** untuk testing API.
 
 ### Cara Pakai:
 
-1. Buka file HTML di browser
+1. Buka file HTML yang sudah saya siapkan di browser
 2. Isi **Base URL**:
    ```
    https://final-project-production-2cff.up.railway.app
