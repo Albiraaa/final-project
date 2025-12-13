@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	"projek/config"
@@ -36,6 +37,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	tokenString, _ := token.SignedString([]byte("SECRET_KEY_HT"))
+	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
