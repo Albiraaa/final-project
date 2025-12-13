@@ -10,6 +10,8 @@ import (
 func InitRoutes() *mux.Router {
 	r := mux.NewRouter()
 
+	r.Use(middleware.CORSMiddleware)
+
 	api := r.PathPrefix("/api").Subrouter()
 
 	api.HandleFunc("/users/register", handlers.Register).Methods("POST")

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Client API Inventaris HT (Golang + JWT)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      margin-bottom: 5px;
+    }
+    .card {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+    }
+    label {
+      display: block;
+      margin-top: 5px;
+    }
+    input {
+      padding: 5px;
+      margin-top: 3px;
+      width: 250px;
+      max-width: 100%;
+    }
+    button {
+      margin-top: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #tokenBox {
+      font-size: 12px;
+      background: #f5f5f5;
+      padding: 5px;
+      border-radius: 4px;
+      word-wrap: break-word;
+    }
+    #result {
+      margin-top: 20px;
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      min-height: 120px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Client API Inventaris HT (Golang + JWT)</h1>
+
+<!-- BASE URL -->
+<div class="card">
+  <h2>Konfigurasi</h2>
+  <label>Base URL API:
+    <input type="text" id="baseUrl"
+      value="https://final-project-production-2cff.up.railway.app" />
+  </label>
+</div>
+
+<!-- LOGIN -->
+<div class="card">
+  <h2>Login</h2>
+  <label>Email
+    <input type="text" id="email" placeholder="contoh: admin@mail.com">
+  </label>
+  <label>Password
+    <input type="password" id="password" placeholder="admin">
+  </label>
+  <button onclick="login()">Login</button>
+
+  <div id="status">Belum login</div>
+  <div><strong>JWT Token:</strong></div>
+  <div id="tokenBox">(kosong)</div>
+</div>
+
+<!-- OPERASI DATA -->
+<div class="card">
+  <h2>Operasi Data</h2>
+
+  <button onclick="getKategori()">Lihat Semua Kategori</button>
+  <button onclick="getLokasi()">Lihat Semua Lokasi</button>
+  <button onclick="getHT()">Lihat Semua HT</button>
+
+  <hr>
+
+  <label>ID HT
+    <input type="number" id="htId" placeholder="contoh: 1">
+  </label>
+  <button onclick="getHTById()">Lihat HT berdasarkan ID</button>
+
+  <br><br>
+
+  <label>ID Kategori
+    <input type="number" id="kategoriId" placeholder="contoh: 1">
+  </label>
+  <button onclick="getKategoriById()">Lihat Kategori by ID</button>
+
+  <br><br>
+
+  <label>ID Lokasi
+    <input type="number" id="lokasiId" placeholder="contoh: 1">
+  </label>
+  <button onclick="getLokasiById()">Lihat Lokasi by ID</button>
+</div>
+
+<h2>Hasil Response</h2>
+<pre id="result">Belum ada request.</pre>
+
+<script>
+  let token = null;
+
+  function setStatus(text, ok = true) {
+    const el = document.getElementById("status");
+    el.textContent = text;
+    el.style.color = ok ? "green" : "red";
+  }
+
+  function setResult(data) {
+    document.getElementById("result").textContent =
+      typeof data === "string" ? data : JSON.stringify(data, null, 2);
+  }
+
+  function setToken(t) {
+    token = t;
+    document.getElementById("tokenBox").textContent = token || "(kosong)";
+    if (token) {
+      setStatus("Login berhasil ✅", true);
+      localStorage.setItem("jwt_token", token);
+    } else {
+      setStatus("Belum login", false);
+      localStorage.removeItem("jwt_token");
+    }
+  }
+
+  (function init() {
+    const saved = localStorage.getItem("jwt_token");
+    if (saved) setToken(saved);
+  })();
+
+  function getBaseUrl() {
+    return document.getElementById("baseUrl").value.replace(/\/+$/, "");
+  }
+
+  async function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      alert("Email & password wajib diisi");
+      return;
+    }
+
+    try {
+      const res = await fetch(getBaseUrl() + "/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.token) {
+        setStatus("Login gagal ❌", false);
+        setResult(data);
+        return;
+      }
+
+      setToken(data.token);
+      setResult(data);
+    } catch (err) {
+      setStatus("Login error", false);
+      setResult(String(err));
+    }
+  }
+
+  async function fetchWithAuth(path) {
+    if (!token) {
+      alert("Belum login");
+      return;
+    }
+
+    try {
+      const res = await fetch(getBaseUrl() + path, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      setResult(String(err));
+    }
+  }
+
+  // ===== API CALLS =====
+  function getKategori() { fetchWithAuth("/api/kategori"); }
+  function getLokasi() { fetchWithAuth("/api/lokasi"); }
+  function getHT() { fetchWithAuth("/api/ht"); }
+
+  function getHTById() {
+    const id = document.getElementById("htId").value;
+    if (!id) return alert("Isi ID HT");
+    fetchWithAuth("/api/ht/" + id);
+  }
+
+  function getKategoriById() {
+    const id = document.getElementById("kategoriId").value;
+    if (!id) return alert("Isi ID Kategori");
+    fetchWithAuth("/api/kategori/" + id);
+  }
+
+  function getLokasiById() {
+    const id = document.getElementById("lokasiId").value;
+    if (!id) return alert("Isi ID Lokasi");
+    fetchWithAuth("/api/lokasi/" + id);
+  }
+</script>
+
+</body>
+</html>
