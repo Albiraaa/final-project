@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
 	"net/http"
-
+	"os"
 	"projek/config"
 	"projek/routes"
 )
@@ -13,6 +12,13 @@ func main() {
 
 	r := routes.InitRoutes()
 
-	log.Println("Server running on :8080")
-	http.ListenAndServe(":8080", r)
+	//log.Println("Server running on :8080")
+	//http.ListenAndServe(":8080", r)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	http.ListenAndServe(":"+port, r)
 }
