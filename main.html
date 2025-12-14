@@ -88,6 +88,18 @@
 <h2>Response</h2>
 <pre id="result">Belum ada request</pre>
 
+<h2>Data Kategori</h2>
+<button onclick="renderKategori()">GET ALL KATEGORI</button>
+<pre id="viewKategori">-</pre>
+
+<h2>Data Lokasi</h2>
+<button onclick="renderLokasi()">GET ALL LOKASI</button>
+<pre id="viewLokasi">-</pre>
+
+<h2>Data HT</h2>
+<button onclick="renderHT()">GET ALL HT</button>
+<pre id="viewHT">-</pre>
+
 <script>
 let token = localStorage.getItem("jwt_token");
 let kategoriCache = [], lokasiCache = [], htCache = [];
@@ -227,6 +239,81 @@ async function refreshAll() {
   await loadLokasi();
   await loadHT();
 }
+
+// ===== RENDER GET ALL =====
+function renderKategori() {
+  let out = "";
+  kategoriCache.forEach(k => {
+    out += `ID: ${k.id}\nNama: ${k.nama}\n------------------\n`;
+  });
+  viewKategori.textContent = out || "Data kosong";
+}
+
+function renderLokasi() {
+  let out = "";
+  lokasiCache.forEach(l => {
+    out += `ID: ${l.id}\nNama: ${l.nama}\n------------------\n`;
+  });
+  viewLokasi.textContent = out || "Data kosong";
+}
+
+function renderHT() {
+  let out = "";
+  htCache.forEach(h => {
+    const kat = kategoriCache.find(k=>k.id==h.kategori_id)?.nama || "-";
+    const lok = lokasiCache.find(l=>l.id==h.lokasi_id)?.nama || "-";
+    out +=
+`ID: ${h.id}
+Serial: ${h.serial}
+Merk: ${h.merk}
+Status: ${h.status}
+Kategori: ${kat}
+Lokasi: ${lok}
+------------------\n`;
+  });
+  viewHT.textContent = out || "Data kosong";
+}
+
+// ===== GET BY ID (AUTO SAAT PILIH) =====
+kategoriIdForm.onchange = () => {
+  const k = kategoriCache.find(x=>x.id==kategoriIdForm.value);
+  if (!k) return;
+  kategoriNama.value = k.nama;
+  viewKategori.textContent =
+`ID: ${k.id}
+Nama: ${k.nama}`;
+};
+
+lokasiIdForm.onchange = () => {
+  const l = lokasiCache.find(x=>x.id==lokasiIdForm.value);
+  if (!l) return;
+  lokasiNama.value = l.nama;
+  viewLokasi.textContent =
+`ID: ${l.id}
+Nama: ${l.nama}`;
+};
+
+htIdForm.onchange = () => {
+  const h = htCache.find(x=>x.id==htIdForm.value);
+  if (!h) return;
+
+  htSerial.value = h.serial;
+  htMerk.value = h.merk;
+  htStatus.value = h.status;
+  htKategoriId.value = h.kategori_id;
+  htLokasiId.value = h.lokasi_id;
+
+  const kat = kategoriCache.find(k=>k.id==h.kategori_id)?.nama || "-";
+  const lok = lokasiCache.find(l=>l.id==h.lokasi_id)?.nama || "-";
+
+  viewHT.textContent =
+`ID: ${h.id}
+Serial: ${h.serial}
+Merk: ${h.merk}
+Status: ${h.status}
+Kategori: ${kat}
+Lokasi: ${lok}`;
+};
 </script>
 
 
